@@ -1,0 +1,46 @@
+{
+  "name": "use-media-query",
+  "version": "0.0.1-alpha.0",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Krombik/use-media-query.git"
+  },
+  "author": "Krombik",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Krombik/use-media-query/issues"
+  },
+  "homepage": "https://github.com/Krombik/use-media-query#readme",
+  "type": "module",
+  "source": "src/index.ts",
+  "scripts": {
+    "build": "ts-node ./scripts/build.mts",
+    "release": "npm publish ./build"
+  },
+  "dependencies": {
+    "media-query-fns": "^1.4.0"
+  },
+  "peerDependencies": {
+    "@types/react": ">=16.8.0",
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "@types/react": "^18.2.7",
+    "prettier": "^2.8.8",
+    "ts-node": "^10.9.1",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "engines": {
+    "node": ">10"
+  },
+  "keywords": [],
+  "sideEffects": false
+}
