@@ -19,9 +19,10 @@ type UseMatchMedia = {
    *
    * > In a Node environment, this hook will always return `false` by default since media queries
    * > are not supported. However, you can customize the behavior of `useMatchMedia` by using the
-   * > `configureNodeEnv` method. See the documentation for `configureNodeEnv` for more information.
+   * > `configureNodeEnv` method. See the [documentation](https://github.com/Krombik/react-hook-media#configurenodeenv) for `configureNodeEnv` for more information.
    *
    * @example
+   * ```js
    * // Usage in a React component
    * const isMobile = useMatchMedia('(max-width: 768px)');
    * if (isMobile) {
@@ -29,6 +30,7 @@ type UseMatchMedia = {
    * } else {
    *   // Render desktop layout
    * }
+   * ```
    *
    * @param {string} mediaQuery - The media query to be evaluated.
    * @returns {boolean} `true` if the media query matches, `false` otherwise.

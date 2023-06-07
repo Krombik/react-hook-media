@@ -1,7 +1,7 @@
 {
   "name": "react-hook-media",
   "version": "0.0.1-alpha.1",
-  "description": "",
+  "description": "A lightweight and tree-shakable library for working with media queries in React applications, providing responsive behavior and conditional rendering based on media query conditions.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Krombik/react-hook-media.git"
@@ -42,6 +42,14 @@
   "engines": {
     "node": ">10"
   },
-  "keywords": [],
+  "keywords": [
+    "react",
+    "matchMedia",
+    "media queries",
+    "responsive",
+    "conditional rendering",
+    "SSR",
+    "testing"
+  ],
   "sideEffects": false
 }

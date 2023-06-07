@@ -28,13 +28,24 @@ yarn add react-hook-media
 import {
   useMatchMedia,
   configureNodeEnv,
+  MatchMedia,
   MatchMediaHydrationProvider,
 } from "react-hook-media";
 
 const MyComponent = () => {
   const isDesktop = useMatchMedia("(min-width: 900px)");
 
-  return <div>{isDesktop ? "This is desktop" : "This is mobile"}</div>;
+  return (
+    <div>
+      {isDesktop ? "This is desktop" : "This is mobile"}
+      <MatchMedia
+        query="(max-width: 899px)"
+        otherwise={"And this is also desktop"}
+      >
+        And this is also mobile
+      </MatchMedia>
+    </div>
+  );
 };
 
 // code bellow is for server-side rendering, ignore it if you don't use it
