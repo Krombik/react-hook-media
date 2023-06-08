@@ -1,6 +1,6 @@
 {
   "name": "react-hook-media",
-  "version": "0.0.1-alpha.1",
+  "version": "1.0.0",
   "description": "A lightweight and tree-shakable library for working with media queries in React applications, providing responsive behavior and conditional rendering based on media query conditions.",
   "repository": {
     "type": "git",
