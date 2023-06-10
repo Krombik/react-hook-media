@@ -10,14 +10,20 @@ React Hook Media is simple to use and integrates seamlessly with React applicati
 
 using npm:
 
-```
+```bash
 npm install --save react-hook-media
 ```
 
 or yarn:
 
-```
+```bash
 yarn add react-hook-media
+```
+
+or pnpm:
+
+```bash
+pnpm add react-hook-media
 ```
 
 ---
@@ -37,12 +43,9 @@ const MyComponent = () => {
 
   return (
     <div>
-      {isDesktop ? "This is desktop" : "This is mobile"}
-      <MatchMedia
-        query="(max-width: 899px)"
-        otherwise={"And this is also desktop"}
-      >
-        And this is also mobile
+      {isDesktop ? "desktop" : "mobile"}
+      <MatchMedia query="(width < 900px)" otherwise={"desktop"}>
+        mobile
       </MatchMedia>
     </div>
   );
@@ -79,9 +82,9 @@ export const getServerSideProps = async () => {
 const useMatchMedia: (mediaQuery: string) => boolean;
 ```
 
-Custom hook that implements the behavior of the [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
+Custom hook that provides the functionality of the [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
 
-> In a Node environment, this hook will always return `false` by default since media queries are not supported. However, you can customize the behavior of `useMatchMedia` by using the [configureNodeEnv](#configurenodeenv) method
+> In a Node environment, where media queries are not supported, you must use the [configureNodeEnv](#configurenodeenv) method to simulate different device conditions, like in [example](#example).
 
 Returns `true` if the media query matches, `false` otherwise.
 
@@ -120,9 +123,9 @@ const configureNodeEnv: (
 
 Configures the Node environment for server-side rendering (SSR) or testing scenarios.
 
-This function is used to set up the environment for the useMatchMedia hook when running React components on the server or in testing environments. It allows you to provide a custom configuration object to simulate different media query results.
+This function is used to set up the environment for the [useMatchMedia](#usematchmedia) hook when running React components on the server or in testing environments. It allows you to provide a custom configuration object to simulate different media query results.
 
-The configuration object should contain properties that match the media query conditions you want to simulate. For example, if you configure it with `{ width: 768 }`, it will simulate the viewport width as if it were 768 pixels wide, affecting the results returned by useMatchMedia when evaluating media queries related to width.
+The configuration object should contain properties that match the media query conditions you want to simulate. For example, if you configure it with `{ width: 768 }`, it will simulate the viewport width as if it were 768 pixels wide, affecting the results returned by [useMatchMedia](#usematchmedia) when evaluating media queries related to width.
 
 Returns a `MatchMediaHydrationContext` object that should be passed to the [MatchMediaHydrationProvider](#matchmediahydrationprovider).
 

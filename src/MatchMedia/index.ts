@@ -38,6 +38,6 @@ export type MatchMediaProps = PropsWithChildren<{
  * ```
  */
 const MatchMedia: FC<MatchMediaProps> = (props) =>
-  useMatchMedia(props.query) ? props.children : props.otherwise;
+  (useMatchMedia(props.query) ? props.children : props.otherwise) || null;
 
 export default MatchMedia;

@@ -1,4 +1,4 @@
-import { setHandler } from "../useMatchMedia";
+import { replaceUseMatchMedia } from "../useMatchMedia";
 import { MatchMediaHydrationContext } from "../MatchMediaHydrationProvider";
 
 export type MediaQueryEnvironmentConfig = {
@@ -164,7 +164,7 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
 
   const store: MatchMediaHydrationContext = {};
 
-  setHandler((mediaQuery) => {
+  replaceUseMatchMedia((mediaQuery) => {
     if (mediaQuery in store) {
       return store[mediaQuery];
     }
@@ -218,20 +218,20 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
 
             let parsedOperand2: number | undefined;
 
-            let kebabKey: keyof typeof parsers;
+            let camelKey: keyof typeof parsers;
 
             if (/^[-+]?\d+(\.\d+)?(?:.*)?$/i.test(operand1)) {
-              kebabKey = toCamelCase(operand2) as keyof typeof parsers;
+              camelKey = toCamelCase(operand2) as keyof typeof parsers;
 
-              parsedOperand2 = config[kebabKey];
+              parsedOperand2 = config[camelKey];
 
-              parsedOperand1 = parsers[kebabKey](operand1);
+              parsedOperand1 = parsers[camelKey](operand1);
             } else {
-              kebabKey = toCamelCase(operand1) as keyof typeof parsers;
+              camelKey = toCamelCase(operand1) as keyof typeof parsers;
 
-              parsedOperand1 = config[kebabKey];
+              parsedOperand1 = config[camelKey];
 
-              parsedOperand2 = parsers[kebabKey](operand2);
+              parsedOperand2 = parsers[camelKey](operand2);
             }
 
             if (parsedOperand1 != null && parsedOperand2 != null) {
@@ -243,14 +243,14 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
             } else {
               queue[currIndex] += false;
 
-              warnAboutMissedKey(kebabKey, mediaQuery);
+              warnAboutMissedKey(camelKey, mediaQuery);
             }
           } else if (split.length == 5) {
-            const key = toCamelCase(split[2]) as keyof typeof parsers;
+            const camelKey = toCamelCase(split[2]) as keyof typeof parsers;
 
-            const parser = parsers[key];
+            const parser = parsers[camelKey];
 
-            const value = config[key];
+            const value = config[camelKey];
 
             if (value != undefined) {
               queue[currIndex] +=
@@ -259,7 +259,7 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
             } else {
               queue[currIndex] += false;
 
-              warnAboutMissedKey(key, mediaQuery);
+              warnAboutMissedKey(camelKey, mediaQuery);
             }
           } else {
             throw new Error(`"${item}" in "${mediaQuery}" is incorrect`);

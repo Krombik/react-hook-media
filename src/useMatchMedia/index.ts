@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useContext, useEffect } from "react";
+import { useState, useLayoutEffect, useContext } from "react";
 import { HydrationContext } from "../MatchMediaHydrationProvider";
 import noop from "lodash.noop";
 
@@ -6,7 +6,7 @@ import noop from "lodash.noop";
 type HandleMediaQuery = (key: string) => boolean;
 
 /** @internal */
-type StoreItem = (forceRerender: (value: {}) => void) => boolean;
+type StoreItem = () => boolean;
 
 /** @internal */
 type SetHandler = {
@@ -15,11 +15,9 @@ type SetHandler = {
 
 type UseMatchMedia = {
   /**
-   * Custom hook that implements the behavior of the [matchMedia](#https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
+   * Custom hook that implements the behavior of the [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
    *
-   * > In a Node environment, this hook will always return `false` by default since media queries
-   * > are not supported. However, you can customize the behavior of `useMatchMedia` by using the
-   * > `configureNodeEnv` method. See the [documentation](https://github.com/Krombik/react-hook-media#configurenodeenv) for `configureNodeEnv` for more information.
+   * > In a Node environment, where media queries are not supported, you must use the [configureNodeEnv](https://github.com/Krombik/react-hook-media#configurenodeenv) method to simulate different device conditions, like in this [example](https://github.com/Krombik/react-hook-media#example).
    *
    * @example
    * ```js
@@ -43,7 +41,7 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
 
   const store = new Map<string, StoreItem>();
 
-  let handleMediaQuery: HandleMediaQuery =
+  let useMatchMedia: HandleMediaQuery =
     typeof window != "undefined"
       ? (key) => {
           let storeItem: StoreItem;
@@ -51,55 +49,37 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
           if (store.has(key)) {
             storeItem = store.get(key)!;
           } else {
-            const set = new Set<(value: {}) => void>();
+            const set = new Set<(value: boolean) => void>();
 
             const mediaQueryList = matchMedia(key);
 
-            const onChange = (e: Pick<MediaQueryListEvent, "matches">) => {
-              value = e.matches;
+            let clientValue = mediaQueryList.matches;
+
+            mediaQueryList.onchange = (e) => {
+              clientValue = e.matches;
 
               const it = set.values();
 
-              const next = {};
-
               for (let i = set.size; i--; ) {
-                it.next().value(next);
+                it.next().value(clientValue);
               }
             };
 
-            let value = mediaQueryList.matches;
-
-            mediaQueryList.onchange = onChange;
-
-            storeItem = (forceRerender) => {
+            storeItem = () => {
               const hydrationCtx = useContext(HydrationContext);
 
-              if (hydrationCtx) {
-                if (key in hydrationCtx) {
-                  const clientValue = value;
+              const isHydration = hydrationCtx && key in hydrationCtx;
 
-                  const serverValue = hydrationCtx[key];
-
-                  value = serverValue;
-
-                  delete hydrationCtx[key];
-
-                  useEffect(() => {
-                    if (clientValue != serverValue) {
-                      onChange({ matches: clientValue });
-                    }
-                  }, []);
-                } else {
-                  useEffect(noop, []);
-                }
-              }
+              const [value, setValue] = useState(
+                isHydration ? hydrationCtx[key] : clientValue
+              );
 
               useLayoutEffect(() => {
-                set.add(forceRerender);
+                set.add(setValue);
 
                 return () => {
                   if (set.size > 1) {
-                    set.delete(forceRerender);
+                    set.delete(setValue);
                   } else {
                     mediaQueryList.onchange = null;
 
@@ -108,26 +88,40 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
                 };
               }, [key]);
 
+              if (hydrationCtx) {
+                if (isHydration) {
+                  useLayoutEffect(() => {
+                    delete hydrationCtx[key];
+
+                    if (value != clientValue) {
+                      setValue(clientValue);
+                    }
+                  }, []);
+                } else {
+                  useLayoutEffect(noop, []);
+                }
+              }
+
               return value;
             };
 
             store.set(key, storeItem);
           }
 
-          return storeItem(useState<{}>()[1]);
+          return storeItem();
         }
       : () => false;
 
   return [
-    (mediaQuery) => handleMediaQuery(mediaQuery.replace(regEx, "")),
-    (_handleMediaQuery) => {
-      handleMediaQuery = _handleMediaQuery;
+    (mediaQuery) => useMatchMedia(mediaQuery.replace(regEx, "")),
+    (_useMatchMedia) => {
+      useMatchMedia = _useMatchMedia;
     },
   ];
 })();
 
 /** @internal */
-export const setHandler = tuple[1];
+export const replaceUseMatchMedia = tuple[1];
 
 const useMatchMedia = tuple[0];
 
