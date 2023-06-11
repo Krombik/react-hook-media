@@ -44,41 +44,41 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
   let useMatchMedia: HandleMediaQuery =
     typeof window != "undefined"
       ? (key) => {
-          let storeItem: StoreItem;
+          let useMatchMedia: StoreItem;
 
           if (store.has(key)) {
-            storeItem = store.get(key)!;
+            useMatchMedia = store.get(key)!;
           } else {
             const set = new Set<(value: boolean) => void>();
 
             const mediaQueryList = matchMedia(key);
 
-            let clientValue = mediaQueryList.matches;
+            let clientMatched = mediaQueryList.matches;
 
             mediaQueryList.onchange = (e) => {
-              clientValue = e.matches;
+              clientMatched = e.matches;
 
               const it = set.values();
 
               for (let i = set.size; i--; ) {
-                it.next().value(clientValue);
+                it.next().value(clientMatched);
               }
             };
 
-            storeItem = () => {
+            useMatchMedia = () => {
               const hydrationCtx = useContext(HydrationContext);
 
               const isHydration = hydrationCtx && key in hydrationCtx;
 
-              const [value, setValue] = useState(
-                isHydration ? hydrationCtx[key] : clientValue
+              const [isMediaMatched, setMatched] = useState(
+                isHydration ? hydrationCtx[key] : clientMatched
               );
 
               useLayoutEffect(() => {
-                set.add(setValue);
+                set.add(setMatched);
 
                 return () => {
-                  set.delete(setValue);
+                  set.delete(setMatched);
 
                   if (!set.size) {
                     // The timeout is used here to handle React StrictMode and prevent unnecessary matchMedia calls when one component is replaced by another component with the same media query.
@@ -98,8 +98,8 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
                   useLayoutEffect(() => {
                     delete hydrationCtx[key];
 
-                    if (value != clientValue) {
-                      setValue(clientValue);
+                    if (isMediaMatched != clientMatched) {
+                      setMatched(clientMatched);
                     }
                   }, []);
                 } else {
@@ -107,13 +107,13 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
                 }
               }
 
-              return value;
+              return isMediaMatched;
             };
 
-            store.set(key, storeItem);
+            store.set(key, useMatchMedia);
           }
 
-          return storeItem();
+          return useMatchMedia();
         }
       : () => false;
 
