@@ -78,15 +78,20 @@ const tuple = ((): [UseMatchMedia, SetHandler] => {
                 set.add(setValue);
 
                 return () => {
-                  if (set.size > 1) {
-                    set.delete(setValue);
-                  } else {
-                    mediaQueryList.onchange = null;
+                  set.delete(setValue);
 
-                    store.delete(key);
+                  if (!set.size) {
+                    // The timeout is used here to handle React StrictMode and prevent unnecessary matchMedia calls when one component is replaced by another component with the same media query.
+                    setTimeout(() => {
+                      if (!set.size) {
+                        mediaQueryList.onchange = null;
+
+                        store.delete(key);
+                      }
+                    });
                   }
                 };
-              }, [key]);
+              }, []);
 
               if (hydrationCtx) {
                 if (isHydration) {
