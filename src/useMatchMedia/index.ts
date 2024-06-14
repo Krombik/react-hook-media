@@ -1,13 +1,7 @@
 import { useState, useLayoutEffect } from "react";
 import { rehydration } from "../utils/rehydration";
 
-/** @internal */
-type StoreItem = {
-  (): () => void;
-  s(): boolean;
-};
-
-const store = new Map<string, StoreItem>();
+const store = new Map<string, () => boolean>();
 
 /**
  * Custom hook that implements the behavior of the [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
@@ -31,57 +25,53 @@ const store = new Map<string, StoreItem>();
 const useMatchMedia = (mediaQuery: string) => {
   mediaQuery = mediaQuery.replace(/^@media( ?)/m, "");
 
-  let effect: StoreItem;
-
-  if (store.has(mediaQuery)) {
-    effect = store.get(mediaQuery)!;
-  } else {
+  if (!store.has(mediaQuery)) {
     const set = new Set<(value: boolean) => void>();
 
     const mediaQueryList = matchMedia(mediaQuery);
 
     let clientMatched = mediaQueryList.matches;
 
-    effect = (() => {
-      if (!set.size) {
-        mediaQueryList.onchange = (e) => {
-          clientMatched = e.matches;
+    store.set(mediaQuery, () => {
+      const t = useState(rehydration[0](clientMatched, mediaQuery));
 
-          const it = set.values();
+      useLayoutEffect(() => {
+        if (!set.size) {
+          mediaQueryList.onchange = (e) => {
+            clientMatched = e.matches;
 
-          const next = it.next.bind(it);
+            const it = set.values();
 
-          for (let i = set.size; i--; ) {
-            next().value(clientMatched);
+            const next = it.next.bind(it);
+
+            for (let i = set.size; i--; ) {
+              next().value(clientMatched);
+            }
+          };
+        }
+
+        const setMatched = t[1];
+
+        rehydration[1](clientMatched, mediaQuery, setMatched);
+
+        set.add(setMatched);
+
+        return () => {
+          set.delete(setMatched);
+
+          if (!set.size) {
+            mediaQueryList.onchange = null;
+
+            store.delete(mediaQuery);
           }
         };
-      }
+      }, []);
 
-      rehydration[1](clientMatched, mediaQuery, setMatched);
-
-      set.add(setMatched);
-
-      return () => {
-        set.delete(setMatched);
-
-        if (!set.size) {
-          mediaQueryList.onchange = null;
-
-          store.delete(mediaQuery);
-        }
-      };
-    }) as StoreItem;
-
-    effect.s = () => rehydration[0](clientMatched, mediaQuery);
-
-    store.set(mediaQuery, effect);
+      return t[0];
+    });
   }
 
-  const [isMediaMatched, setMatched] = useState(effect.s);
-
-  useLayoutEffect(effect, []);
-
-  return isMediaMatched;
+  return store.get(mediaQuery)!();
 };
 
 export default useMatchMedia;
