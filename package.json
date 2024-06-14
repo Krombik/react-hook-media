@@ -1,12 +1,12 @@
 {
   "name": "react-hook-media",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A lightweight and tree-shakable library for working with media queries in React applications, providing responsive behavior and conditional rendering based on media query conditions.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Krombik/react-hook-media.git"
   },
-  "author": "Krombik",
+  "author": "Andrii Dubetskyi",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Krombik/react-hook-media/issues"
@@ -15,8 +15,9 @@
   "type": "module",
   "source": "src/index.ts",
   "scripts": {
-    "build": "ts-node ./scripts/build.mts",
-    "release": "npm publish ./build"
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "release": "tsup && npm publish ./build"
   },
   "peerDependencies": {
     "@types/react": ">=16.8.0",
@@ -28,16 +29,17 @@
     }
   },
   "dependencies": {
+    "lodash.identity": "^3.0.0",
     "lodash.noop": "^3.0.1"
   },
   "devDependencies": {
-    "@types/lodash.noop": "^3.0.7",
-    "@types/node": "^20.2.5",
-    "@types/react": "^18.2.8",
-    "prettier": "^2.8.8",
-    "ts-node": "^10.9.1",
-    "tsup": "^6.7.0",
-    "typescript": "5.0.4"
+    "@types/lodash.identity": "^3.0.9",
+    "@types/lodash.noop": "^3.0.9",
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.3.3",
+    "prettier": "^3.3.2",
+    "tsup": "^8.1.0",
+    "typescript": "^5.4.5"
   },
   "engines": {
     "node": ">10"
@@ -48,8 +50,7 @@
     "media queries",
     "responsive",
     "conditional rendering",
-    "SSR",
-    "testing"
+    "SSR"
   ],
   "sideEffects": false
 }
