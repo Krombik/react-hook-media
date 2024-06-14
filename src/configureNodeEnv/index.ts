@@ -1,4 +1,3 @@
-import { replaceUseMatchMedia } from "../useMatchMedia";
 import { MatchMediaHydrationContext } from "../MatchMediaHydrationProvider";
 
 export type MediaQueryEnvironmentConfig = {
@@ -72,11 +71,11 @@ const warnAboutMissedKey = (key: string, mediaQuey: string) => {
 };
 
 /**
- * Configures the Node environment for server-side rendering (SSR) or testing scenarios.
+ * Configures the Node environment for server-side rendering (SSR).
  *
  * This function is used to set up the environment for the `useMatchMedia` hook
- * when running React components on the server or in testing environments. It allows
- * you to provide a custom configuration object to simulate different media query results.
+ * when running React components on the server. It allows you to provide a custom
+ * configuration object to simulate different media query results.
  *
  * The configuration object should contain properties that match the media query conditions
  * you want to simulate. For example, if you configure it with `{ width: 768 }`, it will
@@ -115,7 +114,9 @@ const warnAboutMissedKey = (key: string, mediaQuey: string) => {
  * };
  * ```
  */
-const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
+const configureNodeEnv = (
+  config: MediaQueryEnvironmentConfig
+): MatchMediaHydrationContext => {
   config = { ...config };
 
   config.all = true;
@@ -162,11 +163,11 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
     >
   >;
 
-  const store: MatchMediaHydrationContext = {};
+  const store: MatchMediaHydrationContext[0] = {};
 
-  replaceUseMatchMedia((mediaQuery) => {
+  global.matchMedia = (mediaQuery) => {
     if (mediaQuery in store) {
-      return store[mediaQuery];
+      return { matches: store[mediaQuery] } as MediaQueryList;
     }
 
     const split = mediaQuery.split(",");
@@ -267,11 +268,12 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
         } else {
           const [kebabKey, value] = item.split(":") as [
             string,
-            string | undefined
+            string | undefined,
           ];
 
-          const camelKey = kebabKey.replace(/-(\w)|^(min|max)-/g, (_, letter) =>
-            letter ? letter.toUpperCase() : ""
+          const camelKey = kebabKey.replace(
+            /-(\w)|^(min|max)-/g,
+            (_, letter) => (letter ? letter.toUpperCase() : "")
           ) as keyof MediaQueryEnvironmentConfig;
 
           if (camelKey in config) {
@@ -280,8 +282,8 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
             )
               ? (a, b) => a > b
               : kebabKey.startsWith("max-")
-              ? (a, b) => a < b
-              : (a, b) => (typeof b == "boolean" ? !!a == b : a === b);
+                ? (a, b) => a < b
+                : (a, b) => (typeof b == "boolean" ? !!a == b : a === b);
 
             queue[currIndex] += check(
               config[camelKey],
@@ -304,16 +306,16 @@ const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
       if (queue[0] ? eval(queue[0]) : true) {
         store[mediaQuery] = true;
 
-        return true;
+        return { matches: true } as MediaQueryList;
       }
     }
 
     store[mediaQuery] = false;
 
-    return false;
-  });
+    return { matches: false } as MediaQueryList;
+  };
 
-  return store;
+  return [store];
 };
 
 export default configureNodeEnv;

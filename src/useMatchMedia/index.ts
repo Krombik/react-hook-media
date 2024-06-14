@@ -1,133 +1,87 @@
-import { useState, useLayoutEffect, useContext } from "react";
-import { HydrationContext } from "../MatchMediaHydrationProvider";
-import noop from "lodash.noop";
+import { useState, useLayoutEffect } from "react";
+import { rehydration } from "../utils/rehydration";
 
 /** @internal */
-type HandleMediaQuery = (key: string) => boolean;
-
-/** @internal */
-type StoreItem = () => boolean;
-
-/** @internal */
-type SetHandler = {
-  (handleMediaQuery: HandleMediaQuery): void;
+type StoreItem = {
+  (): () => void;
+  s(): boolean;
 };
 
-type UseMatchMedia = {
-  /**
-   * Custom hook that implements the behavior of the [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
-   *
-   * > In a Node environment, where media queries are not supported, you must use the [configureNodeEnv](https://github.com/Krombik/react-hook-media#configurenodeenv) method to simulate different device conditions, like in this [example](https://github.com/Krombik/react-hook-media#example).
-   *
-   * @example
-   * ```js
-   * // Usage in a React component
-   * const isMobile = useMatchMedia('(max-width: 768px)');
-   * if (isMobile) {
-   *   // Render mobile layout
-   * } else {
-   *   // Render desktop layout
-   * }
-   * ```
-   *
-   * @param {string} mediaQuery - The media query to be evaluated.
-   * @returns {boolean} `true` if the media query matches, `false` otherwise.
-   */
-  (mediaQuery: string): boolean;
-};
+const store = new Map<string, StoreItem>();
 
-const tuple = ((): [UseMatchMedia, SetHandler] => {
-  const regEx = /^@media( ?)/m;
+/**
+ * Custom hook that implements the behavior of the [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) method as a React hook.
+ *
+ * > In a Node environment, where media queries are not supported, you must use the [configureNodeEnv](https://github.com/Krombik/react-hook-media#configurenodeenv) method to simulate different device conditions, like in this [example](https://github.com/Krombik/react-hook-media#example).
+ *
+ * @example
+ * ```js
+ * // Usage in a React component
+ * const isMobile = useMatchMedia('(max-width: 768px)');
+ * if (isMobile) {
+ *   // Render mobile layout
+ * } else {
+ *   // Render desktop layout
+ * }
+ * ```
+ *
+ * @param mediaQuery - The media query to be evaluated.
+ * @returns  `true` if the media query matches, `false` otherwise.
+ */
+const useMatchMedia = (mediaQuery: string) => {
+  mediaQuery = mediaQuery.replace(/^@media( ?)/m, "");
 
-  const store = new Map<string, StoreItem>();
+  let effect: StoreItem;
 
-  let useMatchMedia: HandleMediaQuery =
-    typeof window != "undefined"
-      ? (key) => {
-          let useMatchMedia: StoreItem;
+  if (store.has(mediaQuery)) {
+    effect = store.get(mediaQuery)!;
+  } else {
+    const set = new Set<(value: boolean) => void>();
 
-          if (store.has(key)) {
-            useMatchMedia = store.get(key)!;
-          } else {
-            const set = new Set<(value: boolean) => void>();
+    const mediaQueryList = matchMedia(mediaQuery);
 
-            const mediaQueryList = matchMedia(key);
+    let clientMatched = mediaQueryList.matches;
 
-            let clientMatched = mediaQueryList.matches;
+    effect = (() => {
+      if (!set.size) {
+        mediaQueryList.onchange = (e) => {
+          clientMatched = e.matches;
 
-            mediaQueryList.onchange = (e) => {
-              clientMatched = e.matches;
+          const it = set.values();
 
-              const it = set.values();
+          const next = it.next.bind(it);
 
-              for (let i = set.size; i--; ) {
-                it.next().value(clientMatched);
-              }
-            };
-
-            useMatchMedia = () => {
-              const hydrationCtx = useContext(HydrationContext);
-
-              const isHydration = hydrationCtx && key in hydrationCtx;
-
-              const [isMediaMatched, setMatched] = useState(
-                isHydration ? hydrationCtx[key] : clientMatched
-              );
-
-              useLayoutEffect(() => {
-                set.add(setMatched);
-
-                return () => {
-                  set.delete(setMatched);
-
-                  if (!set.size) {
-                    // The timeout is used here to handle React StrictMode and prevent unnecessary matchMedia calls when one component is replaced by another component with the same media query.
-                    setTimeout(() => {
-                      if (!set.size) {
-                        mediaQueryList.onchange = null;
-
-                        store.delete(key);
-                      }
-                    });
-                  }
-                };
-              }, []);
-
-              if (hydrationCtx) {
-                if (isHydration) {
-                  useLayoutEffect(() => {
-                    delete hydrationCtx[key];
-
-                    if (isMediaMatched != clientMatched) {
-                      setMatched(clientMatched);
-                    }
-                  }, []);
-                } else {
-                  useLayoutEffect(noop, []);
-                }
-              }
-
-              return isMediaMatched;
-            };
-
-            store.set(key, useMatchMedia);
+          for (let i = set.size; i--; ) {
+            next().value(clientMatched);
           }
+        };
+      }
 
-          return useMatchMedia();
+      rehydration[1](clientMatched, mediaQuery, setMatched);
+
+      set.add(setMatched);
+
+      return () => {
+        set.delete(setMatched);
+
+        if (!set.size) {
+          mediaQueryList.onchange = null;
+
+          store.delete(mediaQuery);
         }
-      : () => false;
+      };
+    }) as StoreItem;
 
-  return [
-    (mediaQuery) => useMatchMedia(mediaQuery.replace(regEx, "")),
-    (_useMatchMedia) => {
-      useMatchMedia = _useMatchMedia;
-    },
-  ];
-})();
+    effect.s = () => rehydration[0](clientMatched, mediaQuery);
 
-/** @internal */
-export const replaceUseMatchMedia = tuple[1];
+    store.set(mediaQuery, effect);
+  }
 
-const useMatchMedia = tuple[0];
+  const [isMediaMatched, setMatched] = useState(effect.s);
+
+  useLayoutEffect(effect, []);
+
+  return isMediaMatched;
+};
 
 export default useMatchMedia;
