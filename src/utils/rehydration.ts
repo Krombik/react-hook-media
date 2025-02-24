@@ -1,12 +1,6 @@
-import identity from "lodash.identity";
-import noop from "lodash.noop";
+import { createContext } from "react";
+import type { MatchMediaHydrationContext } from "../configureNodeEnv";
 
-/** @internal */
-export const rehydration: [
-  getState: (clientState: boolean, mediaQuery: string) => boolean,
-  handleHydration: (
-    clientState: boolean,
-    mediaQuery: string,
-    setState: (value: boolean) => void
-  ) => void,
-] = [identity, noop];
+export const RehydrationContext = createContext<
+  MatchMediaHydrationContext | undefined
+>(undefined);

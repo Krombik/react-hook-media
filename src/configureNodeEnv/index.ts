@@ -1,4 +1,4 @@
-import { MatchMediaHydrationContext } from "../MatchMediaHydrationProvider";
+export type MatchMediaHydrationContext = Record<string, boolean>;
 
 export type MediaQueryEnvironmentConfig = {
   all?: true;
@@ -114,9 +114,7 @@ const warnAboutMissedKey = (key: string, mediaQuey: string) => {
  * };
  * ```
  */
-const configureNodeEnv = (
-  config: MediaQueryEnvironmentConfig
-): MatchMediaHydrationContext => {
+const configureNodeEnv = (config: MediaQueryEnvironmentConfig) => {
   config = { ...config };
 
   config.all = true;
@@ -163,7 +161,7 @@ const configureNodeEnv = (
     >
   >;
 
-  const store: MatchMediaHydrationContext[0] = {};
+  const store: MatchMediaHydrationContext = {};
 
   global.matchMedia = (mediaQuery) => {
     if (mediaQuery in store) {
@@ -315,7 +313,7 @@ const configureNodeEnv = (
     return { matches: false } as MediaQueryList;
   };
 
-  return [store];
+  return store;
 };
 
 export default configureNodeEnv;

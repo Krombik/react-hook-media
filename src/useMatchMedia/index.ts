@@ -1,5 +1,5 @@
-import { useState, useLayoutEffect } from "react";
-import { rehydration } from "../utils/rehydration";
+import { useSyncExternalStore, useContext } from "react";
+import { RehydrationContext } from "../utils/rehydration";
 
 const store = new Map<string, () => boolean>();
 
@@ -26,48 +26,44 @@ const useMatchMedia = (mediaQuery: string) => {
   mediaQuery = mediaQuery.replace(/^@media( ?)/m, "");
 
   if (!store.has(mediaQuery)) {
-    const set = new Set<(value: boolean) => void>();
+    const set = new Set<() => void>();
 
     const mediaQueryList = matchMedia(mediaQuery);
 
-    let clientMatched = mediaQueryList.matches;
+    const subscribe = (onStoreChange: () => void) => {
+      if (!mediaQueryList.onchange) {
+        mediaQueryList.onchange = () => {
+          const it = set.values();
 
-    store.set(mediaQuery, () => {
-      const t = useState(rehydration[0](clientMatched, mediaQuery));
+          const next = it.next.bind(it);
 
-      useLayoutEffect(() => {
-        if (!set.size) {
-          mediaQueryList.onchange = (e) => {
-            clientMatched = e.matches;
-
-            const it = set.values();
-
-            const next = it.next.bind(it);
-
-            for (let i = set.size; i--; ) {
-              next().value(clientMatched);
-            }
-          };
-        }
-
-        const setMatched = t[1];
-
-        rehydration[1](clientMatched, mediaQuery, setMatched);
-
-        set.add(setMatched);
-
-        return () => {
-          set.delete(setMatched);
-
-          if (!set.size) {
-            mediaQueryList.onchange = null;
-
-            store.delete(mediaQuery);
+          for (let i = set.size; i--; ) {
+            next().value();
           }
         };
-      }, []);
+      }
 
-      return t[0];
+      set.add(onStoreChange);
+
+      return () => {
+        set.delete(onStoreChange);
+
+        if (!set.size) {
+          mediaQueryList.onchange = null;
+        }
+      };
+    };
+
+    const getValue = () => mediaQueryList.matches;
+
+    store.set(mediaQuery, () => {
+      const ctx = useContext(RehydrationContext);
+
+      return useSyncExternalStore(
+        subscribe,
+        getValue,
+        ctx && (() => ctx[mediaQuery])
+      );
     });
   }
 

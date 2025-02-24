@@ -1,10 +1,10 @@
-import { defineConfig } from 'tsup';
-import fs from 'fs/promises';
-import { join, relative } from 'path';
+import { defineConfig } from "tsup";
+import fs from "fs/promises";
+import { join, relative } from "path";
 
-const _filesToCopy = ['LICENSE', 'README.md'];
+const _filesToCopy = ["LICENSE", "README.md"];
 
-const _CHUNKS = '_chunks';
+const _CHUNKS = "_chunks";
 
 const _pickFrom = (obj: Record<string, any>, keys: string[]) =>
   keys.reduce<Record<string, any>>(
@@ -32,12 +32,12 @@ type _Exports = Record<string, _Export>;
 const _getExport = (path: string): _Exports => ({
   [path]: {
     require: {
-      types: _getIndexFile(path, 'd.cts'),
-      default: _getIndexFile(path, 'cjs'),
+      types: _getIndexFile(path, "d.cts"),
+      default: _getIndexFile(path, "cjs"),
     },
     import: {
-      types: _getIndexFile(path, 'd.ts'),
-      default: _getIndexFile(path, 'js'),
+      types: _getIndexFile(path, "d.ts"),
+      default: _getIndexFile(path, "js"),
     },
   },
 });
@@ -64,24 +64,24 @@ const _getExports = async (path: string, obj: _Exports) => {
   return obj;
 };
 
-const outDir = 'build';
+const outDir = "build";
 
 export default defineConfig((prevOptions) => ({
   ignoreWatch: [outDir],
   watch: prevOptions.watch,
   outDir,
   minify: false,
-  entry: ['src/index.ts', `src/!(utils|types)/**/*.(ts|tsx)`],
+  entry: ["src/index.ts", `src/!(utils|types)/**/*.(ts|tsx)`],
   splitting: true,
   sourcemap: true,
   clean: true,
-  target: 'es2020',
-  treeshake: { preset: 'smallest' },
+  target: "es2020",
+  treeshake: { preset: "smallest" },
   cjsInterop: true,
   dts: true,
-  format: ['cjs', 'esm'],
-  platform: 'browser',
-  external: ['react'],
+  format: ["cjs", "esm"],
+  platform: "browser",
+  external: ["react"],
   esbuildOptions: (options) => {
     options.chunkNames = `${_CHUNKS}/[name]-[hash]`;
   },
@@ -91,32 +91,32 @@ export default defineConfig((prevOptions) => ({
       JSON.stringify(
         {
           ..._pickFrom(
-            JSON.parse((await fs.readFile('package.json')).toString()),
+            JSON.parse((await fs.readFile("package.json")).toString()),
             [
-              'name',
-              'version',
-              'author',
-              'description',
-              'keywords',
-              'repository',
-              'license',
-              'bugs',
-              'homepage',
-              'peerDependencies',
-              'peerDependenciesMeta',
-              'dependencies',
-              'engines',
+              "name",
+              "version",
+              "author",
+              "description",
+              "keywords",
+              "repository",
+              "license",
+              "bugs",
+              "homepage",
+              "peerDependencies",
+              "peerDependenciesMeta",
+              "dependencies",
+              "engines",
             ]
           ),
           publishConfig: {
-            access: 'public',
+            access: "public",
           },
-          main: _getIndexFile('./', 'cjs'),
-          module: _getIndexFile('./', 'js'),
-          types: _getIndexFile('./', 'd.ts'),
+          main: _getIndexFile("./", "cjs"),
+          module: _getIndexFile("./", "js"),
+          types: _getIndexFile("./", "d.ts"),
           exports: {
-            './package.json': './package.json',
-            ...(await _getExports(outDir, _getExport('.'))),
+            "./package.json": "./package.json",
+            ...(await _getExports(outDir, _getExport("."))),
           },
           sideEffects: false,
         },
