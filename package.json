@@ -1,6 +1,6 @@
 {
   "name": "react-hook-media",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "A lightweight and tree-shakable library for working with media queries in React applications, providing responsive behavior and conditional rendering based on media query conditions.",
   "repository": {
     "type": "git",
@@ -28,18 +28,12 @@
       "optional": true
     }
   },
-  "dependencies": {
-    "lodash.identity": "^3.0.0",
-    "lodash.noop": "^3.0.1"
-  },
   "devDependencies": {
-    "@types/lodash.identity": "^3.0.9",
-    "@types/lodash.noop": "^3.0.9",
     "@types/node": "^20.14.2",
     "@types/react": "^18.3.3",
-    "prettier": "^3.3.2",
-    "tsup": "^8.1.0",
-    "typescript": "^5.4.5"
+    "prettier": "^3.5.1",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">10"
